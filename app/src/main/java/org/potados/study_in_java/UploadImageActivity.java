@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.loader.content.CursorLoader;
 
+import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.view.View;
 import com.google.android.material.snackbar.Snackbar;
@@ -101,25 +102,23 @@ public class UploadImageActivity extends AppCompatActivity {
      * 이미지 선택 창을 띄움. 그 결과는 선택 후에 onActivityResult 메소드로 전달될 것.
      */
     private void pickImage() {
-        Intent intent = new Intent(Intent.ACTION_PICK);
-        intent.setDataAndType(
-                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                android.provider.MediaStore.Images.Media.CONTENT_TYPE
-        );
-        Intent chooser = Intent.createChooser(intent,"사진 선택");
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
 
-        startActivityForResult(chooser, PICK_FROM_FILE);
+        Intent chooser = Intent.createChooser(intent,"파일 선택");
+        intent.setType("application/*");
+
+        startActivityForResult(intent, PICK_FROM_FILE);
     }
 
     /**
      * 이미지를 서버에 업로드함.
-     * @param imageUri 업로드할 이미지의 uri.
+     * @param uri 업로드할 이미지의 uri.
      */
-    private void uploadImage(Uri imageUri) {
+    private void uploadImage(Uri uri) {
         RetrofitService service = RetrofitSingleton.get().create(RetrofitService.class);
 
         // POST의 body 부분 생성
-        File imageFile = new File(getPathFromUri(imageUri));
+        File imageFile = new File(UriHelper.getPath(this, uri));
         RequestBody reqFile = RequestBody.create(MediaType.parse("multipart/form-data"), imageFile);
         MultipartBody.Part body = MultipartBody.Part.createFormData("userFile", imageFile.getName(), reqFile);
 
@@ -136,21 +135,5 @@ public class UploadImageActivity extends AppCompatActivity {
                 t.printStackTrace();
             }
         });
-    }
-
-    /**
-     * URI로부터 실제 파일 경로를 확보함.
-     * @param uri 경로를 알고 싶은 컨텐츠의 uri.
-     * @return 파일 경로
-     */
-    private String getPathFromUri(Uri uri) {
-        String[] proj = { MediaStore.Images.Media.DATA };
-        CursorLoader loader = new CursorLoader(this, uri, proj, null, null, null);
-        Cursor cursor = loader.loadInBackground();
-        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-        cursor.moveToFirst();
-        String result = cursor.getString(column_index);
-        cursor.close();
-        return result;
     }
 }
