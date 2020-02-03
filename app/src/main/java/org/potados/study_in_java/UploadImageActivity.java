@@ -3,7 +3,6 @@ package org.potados.study_in_java;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 
@@ -11,10 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import androidx.loader.content.CursorLoader;
 
-import android.provider.DocumentsContract;
-import android.provider.MediaStore;
 import android.view.View;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -69,7 +65,7 @@ public class UploadImageActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == PICK_FROM_FILE && resultCode == RESULT_OK) {
-            uploadImage(data.getData());
+            uploadFile(data.getData());
         }
     }
 
@@ -103,9 +99,7 @@ public class UploadImageActivity extends AppCompatActivity {
      */
     private void pickImage() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-
-        Intent chooser = Intent.createChooser(intent,"파일 선택");
-        intent.setType("application/*");
+        intent.setType("*/*");
 
         startActivityForResult(intent, PICK_FROM_FILE);
     }
@@ -114,16 +108,20 @@ public class UploadImageActivity extends AppCompatActivity {
      * 이미지를 서버에 업로드함.
      * @param uri 업로드할 이미지의 uri.
      */
-    private void uploadImage(Uri uri) {
+    private void uploadFile(Uri uri) {
         RetrofitService service = RetrofitSingleton.get().create(RetrofitService.class);
+        MediaType type = MediaType.parse("multipart/form-data");
 
-        // POST의 body 부분 생성
+        // POST의 description 부분 생성
+        RequestBody description = RequestBody.create(type, "메시지이이이이이이");
+
+        // POST의 file 부분 생성
         File imageFile = new File(UriHelper.getPath(this, uri));
-        RequestBody reqFile = RequestBody.create(MediaType.parse("multipart/form-data"), imageFile);
-        MultipartBody.Part body = MultipartBody.Part.createFormData("userFile", imageFile.getName(), reqFile);
+        RequestBody reqFile = RequestBody.create(type, imageFile);
+        MultipartBody.Part filePart = MultipartBody.Part.createFormData("userFile", imageFile.getName(), reqFile);
 
         // 이제 올리기
-        service.uploadImage(body).enqueue(new Callback<ResponseBody>() {
+        service.uploadImage(description, filePart).enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                 Snackbar.make(UploadImageActivity.this.findViewById(R.id.root), "성공이라우", Snackbar.LENGTH_SHORT).show();
