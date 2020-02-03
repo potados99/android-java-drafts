@@ -27,9 +27,9 @@ import retrofit2.Response;
 /**
  * 이 액티비티 안에서 일어나는 일:
  *
- * - 사용자가 사진 선택을 요청했을 때, 사진 선택하는 다이얼로그를 띄움.
- * - 사진선택 다이얼로그에서 사진 선택이 완료되면, 그 결과가 콜백으로 전달됨.
- * - 결과가 콜백으로 전달되면 서버로 이미지 업로드가 시작됨.
+ * - 사용자가 파일 선택을 요청했을 때, 파일을 선택하는 다이얼로그를 띄움.
+ * - 파일 선택 다이얼로그에서 사진 선택이 완료되면, 그 결과가 콜백으로 전달됨.
+ * - 결과가 콜백으로 전달되면 서버로 파일 업로드가 시작됨.
  */
 public class UploadImageActivity extends AppCompatActivity {
 
@@ -55,7 +55,7 @@ public class UploadImageActivity extends AppCompatActivity {
         findViewById(R.id.fab).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                pickImage();
+                pickFile();
             }
         });
     }
@@ -97,7 +97,7 @@ public class UploadImageActivity extends AppCompatActivity {
     /**
      * 이미지 선택 창을 띄움. 그 결과는 선택 후에 onActivityResult 메소드로 전달될 것.
      */
-    private void pickImage() {
+    private void pickFile() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("*/*");
 
@@ -105,8 +105,8 @@ public class UploadImageActivity extends AppCompatActivity {
     }
 
     /**
-     * 이미지를 서버에 업로드함.
-     * @param uri 업로드할 이미지의 uri.
+     * 파일의 서버에 업로드함.
+     * @param uri 업로드할 파일의 uri.
      */
     private void uploadFile(Uri uri) {
         RetrofitService service = RetrofitSingleton.get().create(RetrofitService.class);
