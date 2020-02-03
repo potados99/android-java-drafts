@@ -77,7 +77,7 @@ public class UploadImageActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
         if (requestCode == REQUEST_EXTERNAL_STORAGE) {
-            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
                 // good
             } else {
                 Snackbar.make(UploadImageActivity.this.findViewById(R.id.root), "권한내놔!!!!!!!!", Snackbar.LENGTH_LONG).show();
@@ -106,7 +106,7 @@ public class UploadImageActivity extends AppCompatActivity {
                 android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                 android.provider.MediaStore.Images.Media.CONTENT_TYPE
         );
-        Intent chooser = Intent.createChooser(intent,"1a2a3a");
+        Intent chooser = Intent.createChooser(intent,"사진 선택");
 
         startActivityForResult(chooser, PICK_FROM_FILE);
     }
