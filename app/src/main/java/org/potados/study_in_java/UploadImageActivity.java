@@ -51,6 +51,7 @@ public class UploadImageActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_upload_image);
 
+        // 권한내놔!
         giveMePermissions();
 
         // 버튼 클릭 리스너 설정 부분
