@@ -12,6 +12,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import android.view.View;
+import android.widget.Toast;
+
 import com.google.android.material.snackbar.Snackbar;
 
 import java.io.File;
@@ -88,7 +90,6 @@ public class UploadImageActivity extends AppCompatActivity {
     private void giveMePermissions() {
         int readPermission = ActivityCompat.checkSelfPermission(UploadImageActivity.this, PERMISSIONS_STORAGE[0]);
         int writePermission = ActivityCompat.checkSelfPermission(UploadImageActivity.this, PERMISSIONS_STORAGE[1]);
-
         if (writePermission != PackageManager.PERMISSION_GRANTED || readPermission != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(UploadImageActivity.this, PERMISSIONS_STORAGE, REQUEST_EXTERNAL_STORAGE);
         }
@@ -100,6 +101,7 @@ public class UploadImageActivity extends AppCompatActivity {
     private void pickFile() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("*/*");
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
 
         startActivityForResult(intent, PICK_FROM_FILE);
     }
@@ -130,6 +132,7 @@ public class UploadImageActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<ResponseBody> call, Throwable t) {
                 Snackbar.make(UploadImageActivity.this.findViewById(R.id.root), "실패했다우!!!", Snackbar.LENGTH_SHORT).show();
+                Toast.makeText(UploadImageActivity.this, t.getMessage(), Toast.LENGTH_LONG).show();
                 t.printStackTrace();
             }
         });
