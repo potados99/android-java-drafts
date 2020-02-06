@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -16,8 +17,14 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.google.android.material.snackbar.Snackbar;
+import com.hbisoft.pickit.PickiT;
+import com.hbisoft.pickit.PickiTCallbacks;
+import com.jaiselrahman.filepicker.activity.FilePickerActivity;
+import com.jaiselrahman.filepicker.config.Configurations;
+import com.jaiselrahman.filepicker.model.MediaFile;
 
 import java.io.File;
+import java.util.ArrayList;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -34,9 +41,13 @@ import retrofit2.Response;
  * - 파일 선택 다이얼로그에서 사진 선택이 완료되면, 그 결과가 콜백으로 전달됨.
  * - 결과가 콜백으로 전달되면 서버로 파일 업로드가 시작됨.
  */
-public class UploadImageActivity extends AppCompatActivity {
+public class UploadImageActivity extends AppCompatActivity implements PickiTCallbacks {
+
 
     private static final String TAG = "UploadImageActivity";
+
+    // URI로부터 실제 path를 알아내는 데에 사용.
+    PickiT pickiT;
 
     // 권한 요청 시에 사용됨.
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
@@ -63,6 +74,9 @@ public class UploadImageActivity extends AppCompatActivity {
                 pickFile();
             }
         });
+
+        // PickiT 초기화
+        pickiT = new PickiT(this, this);
     }
 
     @Override
@@ -70,7 +84,8 @@ public class UploadImageActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == PICK_FROM_FILE && resultCode == RESULT_OK) {
-            uploadFile(data.getData());
+            // 파일을 확보하여 path를 구한 뒤에 PickiTonCompleteListener 메소드가 호출됨.
+            pickiT.getPath(data.getData(), Build.VERSION.SDK_INT);
         }
     }
 
@@ -98,22 +113,32 @@ public class UploadImageActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public void onBackPressed() {
+        pickiT.deleteTemporaryFile();
+        super.onBackPressed();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (!isChangingConfigurations()) {
+            pickiT.deleteTemporaryFile();
+        }
+    }
+
     /**
      * 이미지 선택 창을 띄움. 그 결과는 선택 후에 onActivityResult 메소드로 전달될 것.
      */
     private void pickFile() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("*/*");
         intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("*/*");
 
         startActivityForResult(intent, PICK_FROM_FILE);
     }
 
-    /**
-     * 파일의 서버에 업로드함.
-     * @param uri 업로드할 파일의 uri.
-     */
-    private void uploadFile(Uri uri) {
+    private void uploadFile(String path) {
         RetrofitService service = RetrofitSingleton.get().create(RetrofitService.class);
         MediaType type = MediaType.parse("multipart/form-data");
 
@@ -121,8 +146,6 @@ public class UploadImageActivity extends AppCompatActivity {
         RequestBody description = RequestBody.create(type, "메시지이이이이이이");
 
         // POST의 file 부분 생성
-        String path = UriHelper.getPath(this, uri);
-        Log.d(TAG, "Path secured: " + path);
         File imageFile = new File(path);
         RequestBody reqFile = RequestBody.create(type, imageFile);
         MultipartBody.Part filePart = MultipartBody.Part.createFormData("userFile", imageFile.getName(), reqFile);
@@ -141,5 +164,28 @@ public class UploadImageActivity extends AppCompatActivity {
                 t.printStackTrace();
             }
         });
+    }
+
+    @Override
+    public void PickiTonStartListener() {
+        Log.d(TAG, "Cache file generation started!");
+    }
+
+    @Override
+    public void PickiTonProgressUpdate(int progress) {
+        Log.d(TAG, "Cache file generation in progress: " + progress);
+    }
+
+    @Override
+    public void PickiTonCompleteListener(String path, boolean wasDriveFile, boolean wasUnknownProvider, boolean wasSuccessful, String Reason) {
+        Log.d(TAG, "Cache file generation completed!");
+
+        if (wasSuccessful) {
+            Log.d(TAG, "The path: " + path);
+            uploadFile(path);
+        }
+        else {
+            Log.e(TAG, "Path resoltuon failed: " + Reason);
+        }
     }
 }
