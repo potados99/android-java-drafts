@@ -11,6 +11,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -34,6 +35,8 @@ import retrofit2.Response;
  * - 결과가 콜백으로 전달되면 서버로 파일 업로드가 시작됨.
  */
 public class UploadImageActivity extends AppCompatActivity {
+
+    private static final String TAG = "UploadImageActivity";
 
     // 권한 요청 시에 사용됨.
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
@@ -118,7 +121,9 @@ public class UploadImageActivity extends AppCompatActivity {
         RequestBody description = RequestBody.create(type, "메시지이이이이이이");
 
         // POST의 file 부분 생성
-        File imageFile = new File(UriHelper.getPath(this, uri));
+        String path = UriHelper.getPath(this, uri);
+        Log.d(TAG, "Path secured: " + path);
+        File imageFile = new File(path);
         RequestBody reqFile = RequestBody.create(type, imageFile);
         MultipartBody.Part filePart = MultipartBody.Part.createFormData("userFile", imageFile.getName(), reqFile);
 
