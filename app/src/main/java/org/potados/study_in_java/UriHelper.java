@@ -8,6 +8,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.text.TextUtils;
 
 public class UriHelper {
     public static String getPath(final Context context, final Uri uri) {
@@ -30,12 +31,29 @@ public class UriHelper {
             }
             // DownloadsProvider
             else if (isDownloadsDocument(uri)) {
-
+                // Fucking Android 8 gives us non-number string when called
+                // DocumentsContract.getDocumentId.
+                // In this case the id starts with "raw:".
+                // We need to handle it.
                 final String id = DocumentsContract.getDocumentId(uri);
-                final Uri contentUri = ContentUris.withAppendedId(
-                        Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
 
-                return getDataColumn(context, contentUri, null, null);
+                if (!TextUtils.isEmpty(id)) {
+                    if (id.startsWith("raw:")) {
+                        // Android 8(Oreo)
+                        return id.replaceFirst("raw:", "");
+                    }
+
+                    try {
+                        final Uri contentUri = ContentUris.withAppendedId(Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
+                        return getDataColumn(context, contentUri, null, null);
+                    } catch (NumberFormatException e) {
+                        // id does not start with "raw:", but not parsable!
+                        return null;
+                    }
+                }
+
+                // id is empty.
+                return null;
             }
             // MediaProvider
             else if (isMediaDocument(uri)) {
