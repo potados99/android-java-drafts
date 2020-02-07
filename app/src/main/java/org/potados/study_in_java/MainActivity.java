@@ -28,8 +28,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
 
-        // startActivity(new Intent(MainActivity.this, UploadImageActivity.class));
-
         // 첫 번째 방법.
         binding.newActivityButton.setOnClickListener(new TestClickListener());
 
@@ -51,6 +49,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
-        Toast.makeText(v.getContext(), "Click!", Toast.LENGTH_SHORT).show();
+        // Toast.makeText(v.getContext(), "Click!", Toast.LENGTH_SHORT).show();
+        startActivity(new Intent(MainActivity.this, UploadImageActivity.class));
     }
 }

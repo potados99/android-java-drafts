@@ -132,6 +132,8 @@ public class UploadImageActivity extends AppCompatActivity implements PickiTCall
     // 사진 다이얼로그 요청 시에 사용.
     private static int PICK_FROM_FILE = 9999;
 
+    // 진행 상황 띄우는 스낵바.
+    private Snackbar progressSnackbar;
 
     ////////////////////////////////////////////////////////////////
     // AppCompatActivity 콜백
@@ -160,6 +162,8 @@ public class UploadImageActivity extends AppCompatActivity implements PickiTCall
         // PickiT 초기화
         pickiT = new PickiT(this, this);
         //리스너랑 콜백이랑 같다.
+
+        progressSnackbar = Snackbar.make(findViewById(R.id.root), "", Snackbar.LENGTH_INDEFINITE);
     }
 
     /**
@@ -258,10 +262,15 @@ public class UploadImageActivity extends AppCompatActivity implements PickiTCall
         RequestBody reqFile = RequestBody.create(type, imageFile);
         MultipartBody.Part filePart = MultipartBody.Part.createFormData("userFile", imageFile.getName(), reqFile);
 
+        progressSnackbar.setText("파일 올리는 중...");
+        progressSnackbar.show();
+
         // 이제 올리기
         service.uploadImage(description, filePart).enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                progressSnackbar.dismiss();
+
                 if (response.isSuccessful()) {
                     Snackbar.make(UploadImageActivity.this.findViewById(R.id.root), "성공이라우", Snackbar.LENGTH_SHORT).show();
                 }
@@ -272,6 +281,8 @@ public class UploadImageActivity extends AppCompatActivity implements PickiTCall
 
             @Override
             public void onFailure(Call<ResponseBody> call, Throwable t) {
+                progressSnackbar.dismiss();
+
                 Snackbar.make(UploadImageActivity.this.findViewById(R.id.root), "실패했다우!!!", Snackbar.LENGTH_SHORT).show();
                 Toast.makeText(UploadImageActivity.this, t.getMessage(), Toast.LENGTH_LONG).show();
                 t.printStackTrace();
@@ -290,6 +301,8 @@ public class UploadImageActivity extends AppCompatActivity implements PickiTCall
     @Override
     public void PickiTonStartListener() {
         Log.d(TAG, "Cache file generation started!");
+
+        progressSnackbar.show();
     }
 
     /**
@@ -299,6 +312,8 @@ public class UploadImageActivity extends AppCompatActivity implements PickiTCall
     @Override
     public void PickiTonProgressUpdate(int progress) {
         Log.d(TAG, "Cache file generation in progress: " + progress);
+
+        progressSnackbar.setText("파일 복사중..." + progress + "%");
     }
 
     /**
@@ -318,7 +333,8 @@ public class UploadImageActivity extends AppCompatActivity implements PickiTCall
             uploadFile(path, "success ><");
         }
         else {
-            Log.e(TAG, "Path resolutuon failed: " + Reason);
+            Log.e(TAG, "Path resolution failed: " + Reason);
+            progressSnackbar.dismiss();
         }
     }
 }
