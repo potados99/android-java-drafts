@@ -133,6 +133,7 @@ public class UploadImageActivity extends AppCompatActivity implements PickiTCall
     private static int PICK_FROM_FILE = 9999;
 
     // 진행 상황 띄우는 스낵바.
+    // 스낵바는 토스트와 다르게 한번 만들어놓고 가렸다가 숨겼다가 하며 재활용할 수 있음!
     private Snackbar progressSnackbar;
 
     ////////////////////////////////////////////////////////////////
@@ -163,6 +164,8 @@ public class UploadImageActivity extends AppCompatActivity implements PickiTCall
         pickiT = new PickiT(this, this);
         //리스너랑 콜백이랑 같다.
 
+        // 스낵바 생성!
+        // 한번 띄우면 dismiss() 전까지 떠있어야 하기 때문에 길이는 LENGTH_INDEFINITE(무한)으로 설정.
         progressSnackbar = Snackbar.make(findViewById(R.id.root), "", Snackbar.LENGTH_INDEFINITE);
     }
 
@@ -262,6 +265,13 @@ public class UploadImageActivity extends AppCompatActivity implements PickiTCall
         RequestBody reqFile = RequestBody.create(type, imageFile);
         MultipartBody.Part filePart = MultipartBody.Part.createFormData("userFile", imageFile.getName(), reqFile);
 
+        // 이곳에서 스낵바의 상태는 두 가지 경우가 있음:
+        //
+        // 경우1: 파일 복사가 필요 없어 PickiTonCompleteListener()가 바로 호출된 경우.
+        // 이 때에는 스낵바가 떠있지 않은 상태이므로 show()를 호출해 띄워주어야 함.
+        //
+        // 경우2: 파일을 복사를 마치고 파일 복사 진행 상황이 표시된 스낵바가 떠있는 경우.
+        // 이 때에는 show()를 호출하지 않아도 어차피 표시되어 있지만 한번 더 show()한다고 문제되지는 않음.
         progressSnackbar.setText("파일 올리는 중...");
         progressSnackbar.show();
 
@@ -269,18 +279,19 @@ public class UploadImageActivity extends AppCompatActivity implements PickiTCall
         service.uploadImage(description, filePart).enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                // 처리가 끝나면 스낵바를 숨겨줌.
                 progressSnackbar.dismiss();
 
                 if (response.isSuccessful()) {
                     Snackbar.make(UploadImageActivity.this.findViewById(R.id.root), "성공이라우", Snackbar.LENGTH_SHORT).show();
-                }
-                else {
+                } else {
                     Snackbar.make(UploadImageActivity.this.findViewById(R.id.root), "실패했다우!!!", Snackbar.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<ResponseBody> call, Throwable t) {
+                // 처리가 끝나면 스낵바를 숨겨줌.
                 progressSnackbar.dismiss();
 
                 Snackbar.make(UploadImageActivity.this.findViewById(R.id.root), "실패했다우!!!", Snackbar.LENGTH_SHORT).show();
@@ -302,6 +313,7 @@ public class UploadImageActivity extends AppCompatActivity implements PickiTCall
     public void PickiTonStartListener() {
         Log.d(TAG, "Cache file generation started!");
 
+        // 파일 복사가 일어나는 경우이니, 파일 복사 진행 상황을 알릴 스낵바를 표시함.
         progressSnackbar.show();
     }
 
@@ -313,6 +325,7 @@ public class UploadImageActivity extends AppCompatActivity implements PickiTCall
     public void PickiTonProgressUpdate(int progress) {
         Log.d(TAG, "Cache file generation in progress: " + progress);
 
+        // 업데이트마다 바뀐 진행 상황을 스낵바에 반영함.
         progressSnackbar.setText("파일 복사중..." + progress + "%");
     }
 
@@ -328,12 +341,21 @@ public class UploadImageActivity extends AppCompatActivity implements PickiTCall
     public void PickiTonCompleteListener(String path, boolean wasDriveFile, boolean wasUnknownProvider, boolean wasSuccessful, String Reason) {
         Log.d(TAG, "Cache file generation completed!");
 
+        // 여기서 파일 복사가 끝났다고 바로 스낵바를 숨기지 않음.
+        // dismiss()를 호출해 스낵바를 숨긴 뒤 uploadFile()에서 바로 show()를 호출하면
+        // 순서가 뒤죽박죽인지 스낵바가 제대로 표시되지 않음.
+        // 어차피 uploadFile()에서도 같은 스낵바를 활용할 것이니 숨기지 않고 놔둠.
+
         if (wasSuccessful) {
             Log.d(TAG, "The path: " + path);
+
+            // uploadFile()이 호출되면 이 안에서 스낵바가 사용되고, dismiss() 호출에 의해 숨겨질 것임.
             uploadFile(path, "success ><");
         }
         else {
             Log.e(TAG, "Path resolution failed: " + Reason);
+
+            // uploadFile()이 호출되지 않는다면 여기서 스낵바를 숨겨야 함.
             progressSnackbar.dismiss();
         }
     }
