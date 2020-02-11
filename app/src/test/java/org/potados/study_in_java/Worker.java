@@ -3,13 +3,13 @@ package org.potados.study_in_java;
 public class Worker {
     Thread t;
 
-    public Worker(final SomeComponent component) {
+    public Worker(final Blog component) {
 
         t = new Thread(new Runnable() {
             @Override
             public void run() {
                 while (true) {
-                    component.handleYourEvent();
+                    component.writeNewPost();
 
                     try {
                         Thread.sleep(1000);

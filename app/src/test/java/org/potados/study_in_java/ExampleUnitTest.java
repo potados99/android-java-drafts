@@ -10,15 +10,14 @@ import org.junit.Test;
 public class ExampleUnitTest {
     @Test
     public void workerTest() {
-        SomeComponent component = new SomeComponent();
+        // 전지적 시점
 
-        component.setOnEventListener(new SomeComponent.OnEventListener() {
-            @Override
-            public void onEvent(SomeComponent component) {
-                System.out.println("HEY!!! EVENT!!!!");
-            }
-        });
+        Blog blog = new Blog();
 
-        new Worker(component).start();
+        new Home(blog);
+
+        new Company(blog);
+
+        new Worker(blog).start();
     }
 }
