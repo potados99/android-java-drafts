@@ -21,6 +21,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         binding.setLifecycleOwner(this);
         binding.setVm(vm);
 
+
+        TokenManager tm = TokenManager.getInstance();
+
+
         binding.countUpButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
