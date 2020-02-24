@@ -24,6 +24,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         TokenManager tm = TokenManager.getInstance();
 
+        String token = tm.getToken(this);
+        if (token != null) {
+            // 자동로그인 ㄱ
+            // 토큰을 가지고 서버에 바로 로그인 요청 전송
+        } else{
+            // 자동로그인 불가.
+            // 로그인 화면 띄워야 함.
+            // 로그인 후에는 tm.putToken(context, token) 해줌.
+        }
+
+
+
 
         binding.countUpButton.setOnClickListener(new View.OnClickListener() {
             @Override
