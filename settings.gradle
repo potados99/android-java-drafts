@@ -1,2 +1,3 @@
 include ':app'
 rootProject.name='study_in_java'
+include ':workmanagerpractice'
